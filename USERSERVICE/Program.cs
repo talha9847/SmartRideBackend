@@ -1,16 +1,22 @@
+using SmartRide.Implementations;
+using SmartRide.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Add services to the container
-builder.Services.AddEndpointsApiExplorer(); // Needed for Swagger with minimal APIs
-builder.Services.AddSwaggerGen();           // Swagger generator
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped<UserInterface, UserRepo>(provider => new UserRepo(conn));
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();       // Enable Swagger middleware
-    app.UseSwaggerUI();     // Enable Swagger UI
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -35,7 +41,7 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
-
+app.MapControllers();
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
