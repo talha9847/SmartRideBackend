@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using SmartRide.Interfaces;
 using UserService.Model;
@@ -48,7 +49,7 @@ public class UserRepo : UserInterface
     {
         try
         {
-            if (!await CheckEmail(user.Email ?? ""))
+            if (await CheckEmail(user.Email ?? ""))
             {
                 return -1;
             }
@@ -86,6 +87,54 @@ public class UserRepo : UserInterface
             return -500;
 
         }
+    }
 
+    public async Task<bool> CheckUsername(string username)
+    {
+        try
+        {
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT 1 FROM users WHERE username=@username LIMIT 1";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@username", username);
+                    var reader = await cmd.ExecuteScalarAsync();
+                    return reader != null;
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<bool> CheckEmailExists(string email)
+    {
+        try
+        {
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT 1 FROM users WHERE email=@email LIMIT 1";
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    var reader = await cmd.ExecuteScalarAsync();
+                    return reader != null;
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+
+            System.Console.WriteLine("Error: " + ex.Message);
+            return false;
+
+        }
     }
 }

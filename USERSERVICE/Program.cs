@@ -2,6 +2,16 @@ using SmartRide.Implementations;
 using SmartRide.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllers();
@@ -11,6 +21,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<UserInterface, UserRepo>(provider => new UserRepo(conn));
 var app = builder.Build();
+app.UseCors("AllowFrontend");
+
 
 
 if (app.Environment.IsDevelopment())

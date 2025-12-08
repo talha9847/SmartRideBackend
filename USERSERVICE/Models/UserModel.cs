@@ -30,7 +30,7 @@ public class UserModel
 
     [Required]
     [MaxLength(20)]
-    public string? Role { get; set; }
+    public string? Role { get; set; } = "User";
 
     [MaxLength(500, ErrorMessage = "Bio cannot exceed 500 characters")]
     public string? Bio { get; set; }
