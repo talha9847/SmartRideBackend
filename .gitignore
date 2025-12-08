@@ -27,8 +27,14 @@ bld/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-appsettings.json       # gitignored, contains secrets
 
+
+
+# User-specific app settings (contains secrets!)
+appsettings.json
+
+# Optional: development-only settings
+appsettings.Development.json
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
