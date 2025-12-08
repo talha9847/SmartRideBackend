@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,17 @@ namespace SmartRide.Controllers
                 return BadRequest(new { message = "Username must be at least 3 characters long", success = false });
 
             }
+            var usernamePattern = @"^[a-zA-Z0-9._]+$";
+
+            if (!Regex.IsMatch(user.UserName ?? "", usernamePattern))
+            {
+                return Conflict(new
+                {
+                    success = false,
+                    message = "Username can only contain letters, numbers, underscores (_) and dots (.)"
+                });
+            }
+
 
             bool userNameExist = await _userRepo.CheckUsername(user.UserName ?? "");
 
@@ -70,11 +82,49 @@ namespace SmartRide.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginModel login)
+        public async Task<IActionResult> Login(LoginModel login)
         {
-            System.Console.WriteLine(login.Identifier);
-            System.Console.WriteLine(login.Password);
-            return Ok(new { message = "Login Successfull", succeess = true });
+            string? identifier = login.Identifier?.Trim();
+            string? password = login.Password;
+
+            bool isEmail = Regex.IsMatch(identifier ?? "", @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+
+            if (isEmail)
+            {
+                var isEmailExist = await _userRepo.CheckEmailExists(identifier ?? "");
+                if (!isEmailExist)
+                {
+                    return Conflict(new { message = "Invalid username/email or password" });
+                }
+                var userId = await _userRepo.VerifyPasswordWithEmail(identifier ?? "", password ?? "");
+
+                if (userId > 0)
+                {
+                    return Ok(new { message = "Login successfull", success = true });
+                }
+                else
+                {
+                    return Unauthorized(new { msessage = "Invalid password", success = false });
+                }
+            }
+            else
+            {
+                var isUsername = await _userRepo.CheckUsername(identifier ?? "");
+                if (!isUsername)
+                {
+                    return Conflict(new { message = "Invalid username/email or password" });
+                }
+                var userId = await _userRepo.VerifyPasswordWithUsername(identifier ?? "", password ?? "");
+
+                if (userId > 0)
+                {
+                    return Ok(new { message = "Login successfull", success = true });
+                }
+                else
+                {
+                    return Unauthorized(new { msessage = "Invalid password", success = false });
+                }
+            }
         }
 
 

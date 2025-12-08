@@ -1,3 +1,4 @@
+using System.Data.Common;
 using UserService.Model;
 
 namespace SmartRide.Interfaces;
@@ -8,5 +9,7 @@ public interface UserInterface
 
     Task<bool> CheckUsername(string username);
     Task<bool> CheckEmailExists(string email);
+    Task<int> VerifyPasswordWithEmail(string email, string password);
+    Task<int> VerifyPasswordWithUsername(string username, string password);
     // Task<UserModel> Login(string identifier, string password);
 }

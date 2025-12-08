@@ -137,4 +137,77 @@ public class UserRepo : UserInterface
 
         }
     }
+
+    public async Task<int> VerifyPasswordWithEmail(string email, string password)
+    {
+        try
+        {
+            string dbPassword = "";
+            int id = 0;
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT user_id, password_hash from users WHERE email=@email LIMIT 1";
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            id = reader.GetInt32(0);
+                            dbPassword = reader.GetString(1);
+                            bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
+                            if (isValid)
+                            {
+                                return id;
+                            }
+                        }
+                    }
+                }
+            }
+            return id;
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return -1;
+        }
+    }
+    public async Task<int> VerifyPasswordWithUsername(string username, string password)
+    {
+        try
+        {
+            string dbPassword = "";
+            int id = 0;
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT user_id, password_hash from users WHERE username=@username LIMIT 1";
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@username", username);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            id = reader.GetInt32(0);
+                            dbPassword = reader.GetString(1);
+                            bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
+                            if (isValid)
+                            {
+                                return id;
+                            }
+                        }
+                    }
+                }
+            }
+            return id;
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return -1;
+        }
+    }
 }
