@@ -9,7 +9,7 @@ public interface UserInterface
 
     Task<bool> CheckUsername(string username);
     Task<bool> CheckEmailExists(string email);
-    Task<int> VerifyPasswordWithEmail(string email, string password);
-    Task<int> VerifyPasswordWithUsername(string username, string password);
+    Task<(int, string)> VerifyPasswordWithEmail(string email, string password);
+    Task<(int, string)> VerifyPasswordWithUsername(string username, string password);
     // Task<UserModel> Login(string identifier, string password);
 }

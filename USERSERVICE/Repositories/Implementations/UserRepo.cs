@@ -138,16 +138,17 @@ public class UserRepo : UserInterface
         }
     }
 
-    public async Task<int> VerifyPasswordWithEmail(string email, string password)
+    public async Task<(int, string)> VerifyPasswordWithEmail(string email, string password)
     {
         try
         {
             string dbPassword = "";
             int id = 0;
+            string role = "";
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var query = "SELECT user_id, password_hash from users WHERE email=@email LIMIT 1";
+                var query = "SELECT user_id,role password_hash from users WHERE email=@email LIMIT 1";
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@email", email);
@@ -156,34 +157,36 @@ public class UserRepo : UserInterface
                         if (await reader.ReadAsync())
                         {
                             id = reader.GetInt32(0);
+                            role = reader.GetString(1);
                             dbPassword = reader.GetString(1);
                             bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
                             if (isValid)
                             {
-                                return id;
+                                return (id, role);
                             }
                         }
                     }
                 }
             }
-            return id;
+            return (id, role);
         }
         catch (System.Exception ex)
         {
             System.Console.WriteLine("Error: " + ex.Message);
-            return -1;
+            return (-1, "");
         }
     }
-    public async Task<int> VerifyPasswordWithUsername(string username, string password)
+    public async Task<(int, string)> VerifyPasswordWithUsername(string username, string password)
     {
         try
         {
             string dbPassword = "";
             int id = 0;
+            string role = "";
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var query = "SELECT user_id, password_hash from users WHERE username=@username LIMIT 1";
+                var query = "SELECT user_id,role password_hash from users WHERE username=@username LIMIT 1";
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@username", username);
@@ -192,22 +195,23 @@ public class UserRepo : UserInterface
                         if (await reader.ReadAsync())
                         {
                             id = reader.GetInt32(0);
+                            role = reader.GetString(2);
                             dbPassword = reader.GetString(1);
                             bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
                             if (isValid)
                             {
-                                return id;
+                                return (id, role);
                             }
                         }
                     }
                 }
             }
-            return id;
+            return (id, role);
         }
         catch (System.Exception ex)
         {
             System.Console.WriteLine("Error: " + ex.Message);
-            return -1;
+            return (-1, "");
         }
     }
 }

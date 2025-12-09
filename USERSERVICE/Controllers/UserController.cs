@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartRide.Interfaces;
 using UserService.Model;
+using UserService.Services;
 
 namespace SmartRide.Controllers
 {
@@ -13,9 +14,11 @@ namespace SmartRide.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserInterface _userRepo;
-        public UserController(UserInterface userRepo)
+        private readonly JwtService _jwtService;
+        public UserController(UserInterface userRepo, JwtService jwtService)
         {
             _userRepo = userRepo;
+            _jwtService = jwtService;
         }
 
 
@@ -96,11 +99,22 @@ namespace SmartRide.Controllers
                 {
                     return Conflict(new { message = "Invalid username/email or password" });
                 }
-                var userId = await _userRepo.VerifyPasswordWithEmail(identifier ?? "", password ?? "");
+                var (userId, role) = await _userRepo.VerifyPasswordWithEmail(identifier ?? "", password ?? "");
 
                 if (userId > 0)
                 {
-                    return Ok(new { message = "Login successfull", success = true });
+                    var token = await _jwtService.JwtGeneration(userId, role);
+                    var cookieOptions = new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddDays(30)
+                    };
+
+                    Response.Cookies.Append("jwtToken", token ?? "", cookieOptions);
+
+                    return Ok(new { message = "Login successfull", success = true, jwtToken = token });
                 }
                 else
                 {
@@ -114,11 +128,22 @@ namespace SmartRide.Controllers
                 {
                     return Conflict(new { message = "Invalid username/email or password" });
                 }
-                var userId = await _userRepo.VerifyPasswordWithUsername(identifier ?? "", password ?? "");
+                var (userId, role) = await _userRepo.VerifyPasswordWithUsername(identifier ?? "", password ?? "");
 
                 if (userId > 0)
                 {
-                    return Ok(new { message = "Login successfull", success = true });
+                    var token = await _jwtService.JwtGeneration(userId, role);
+                    var cookieOptions = new CookieOptions
+                    {
+                        HttpOnly = false,
+                        Secure = false,
+                        SameSite = SameSiteMode.Lax,
+                        Expires = DateTime.UtcNow.AddDays(30)
+                    };
+
+                    Response.Cookies.Append("jwtToken", token ?? "", cookieOptions);
+
+                    return Ok(new { message = "Login successfull", success = true, jwtToken = token });
                 }
                 else
                 {
