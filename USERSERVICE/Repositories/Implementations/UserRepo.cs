@@ -148,7 +148,7 @@ public class UserRepo : UserInterface
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var query = "SELECT user_id,role password_hash from users WHERE email=@email LIMIT 1";
+                var query = "SELECT user_id,role, password_hash from users WHERE email=@email LIMIT 1";
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@email", email);
@@ -158,7 +158,7 @@ public class UserRepo : UserInterface
                         {
                             id = reader.GetInt32(0);
                             role = reader.GetString(1);
-                            dbPassword = reader.GetString(1);
+                            dbPassword = reader.GetString(2);
                             bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
                             if (isValid)
                             {
@@ -186,7 +186,7 @@ public class UserRepo : UserInterface
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var query = "SELECT user_id,role password_hash from users WHERE username=@username LIMIT 1";
+                var query = "SELECT user_id,role, password_hash from users WHERE username=@username LIMIT 1";
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@username", username);
@@ -195,8 +195,8 @@ public class UserRepo : UserInterface
                         if (await reader.ReadAsync())
                         {
                             id = reader.GetInt32(0);
-                            role = reader.GetString(2);
-                            dbPassword = reader.GetString(1);
+                            role = reader.GetString(1);
+                            dbPassword = reader.GetString(2);
                             bool isValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
                             if (isValid)
                             {

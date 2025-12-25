@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
 
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
 {
@@ -53,6 +54,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<UserInterface, UserRepo>(provider => new UserRepo(conn ?? ""));
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddSingleton<PostGrpcClient>();
+
 var app = builder.Build();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();

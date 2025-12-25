@@ -15,10 +15,13 @@ namespace SmartRide.Controllers
     {
         private readonly UserInterface _userRepo;
         private readonly JwtService _jwtService;
-        public UserController(UserInterface userRepo, JwtService jwtService)
+        private readonly PostGrpcClient _postClient;
+
+        public UserController(UserInterface userRepo, JwtService jwtService, PostGrpcClient postClient)
         {
             _userRepo = userRepo;
             _jwtService = jwtService;
+            _postClient = postClient;
         }
 
 
@@ -197,6 +200,14 @@ namespace SmartRide.Controllers
             }
 
             return Ok(new { available = true, message = "Email is available" });
+        }
+
+
+        [HttpGet("posts")]
+        public async Task<IActionResult> GetMyPosts()
+        {
+            var response = await _postClient.GetPostsByUserAsync();
+            return Ok(response.Posts);
         }
     }
 }
